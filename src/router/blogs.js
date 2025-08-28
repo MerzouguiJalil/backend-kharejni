@@ -38,10 +38,10 @@ router.get('/blogs', auth, async (req, res) => {
         const object = {
             id : element._id ,
             title : element.title ,
-            text : element.text ,
+            content : element.content ,
             date : element.date ,
             email : element.owner.email , 
-            name : element.owner.user_name
+            author : element.owner.user_name
         }
         Data.push(object)
     });
