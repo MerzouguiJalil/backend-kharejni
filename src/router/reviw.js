@@ -150,4 +150,72 @@ router.delete('/reviews/:id' , auth , async (req , res) => {
     }
 })
 
+
+router.post('/reviews/comment/:id' , auth , async (req , res) => {
+    try {
+        const pub = await Review.findOne({_id : req.params.id})
+        if( ! pub) {
+            return res.status(404).send()
+        }
+
+        pub.comments = pub.comments.concat({...req.body,comment_owner : req.user._id })
+        await pub.save()
+        res.send(pub)
+
+    }catch(e) {
+        res.status(500).send()
+        console.log(e)
+    }
+})
+
+router.get('/reviews/comment/:id' , auth , async (req , res) => {
+    try {
+        const pub = await Review.findOne({_id : req.params.id})
+        if( ! pub) {
+            return res.status(404).send()
+        }
+
+        await pub.populate('comments.comment_owner')
+        res.send(pub.comments)
+
+    }catch(e) {
+
+        res.status(500).send()
+        console.log(e)
+    }
+})
+
+router.patch('/reviews/comment/:idp/:idc', auth, async (req, res) => {
+    try {
+        const updates = Object.keys(req.body);
+        const permissions = ['comment', 'date'];
+
+        const isValid = updates.every(key => permissions.includes(key));
+        if(!isValid) return res.status(400).send('Invalid updates');
+
+        const pub = await Review.findById(req.params.idp);
+        if(!pub) return res.status(404).send('Review not found');
+
+        let indexc = -1;
+        pub.comments.forEach((element, index) => {
+            if(element.comment_owner.toString() === req.params.idc) {
+                indexc = index;
+            }
+        });
+
+        if(indexc === -1) return res.status(404).send('Comment not found');
+
+        pub.comments[indexc].comment = req.body.comment;
+        pub.comments[indexc].date = req.body.date;
+
+        await pub.save();
+        res.send(pub);
+
+    } catch(e) {
+        console.log(e);
+        res.status(500).send('Server error');
+    }
+});
+
+
 module.exports = router
