@@ -4,7 +4,6 @@ const User = require('../model/user')
 const auth = async (req, res, next) => {
     try {
         const authHeader = req.headers['authorization']
-        console.log(authHeader)
 
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({ error: 'Authorization header missing or invalid' })

@@ -47,6 +47,11 @@ router.post('/logout' ,auth , async (req , res) => {
         res.send(500).send()
         console.log(e)
     }
+}) 
+
+router.get('/user' , auth , (req , res) => {
+    const user = req.user
+    res.send(user)
 })
 
 router.get('/admin' , async (req , res) => {
