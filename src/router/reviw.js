@@ -12,7 +12,9 @@ router.post('/reviews' , auth , async (req , res) => {
         const user = req.user
         const review = new Review({
             ...req.body ,
-            owner : user._id
+            owner : user._id ,
+            likesNb : 0 ,
+            people : []
     })
 
     await review.save()
@@ -27,27 +29,76 @@ router.post('/reviews' , auth , async (req , res) => {
 
 })
 
+router.patch('/reviews/likes/:id', auth, async (req, res) => {
+    try {
+        const op = req.body.op
+        const pub = await Review.findById(req.params.id)
 
-router.get('/reviews', auth, async (req, res) => {
+        if (!pub) {
+            return res.status(404).send({ error: "Review not found" })
+        }
+
+        if (op === 'inc') {
+            // check if user already liked
+            const notLikedYet = pub.people.every(p => p.person.toString() !== req.user._id.toString())
+
+            if (notLikedYet) {
+                pub.likesNb++
+                pub.people.push({ person: req.user._id })
+                await pub.save()
+                return res.send(pub)
+            } else {
+                throw new Error('Already liked')
+            }
+
+        } else if (op === 'dec') {
+            // check if user has liked
+            const hasLiked = pub.people.some(p => p.person.toString() === req.user._id.toString())
+
+            if (hasLiked) {
+                pub.likesNb--
+                pub.people = pub.people.filter(p => p.person.toString() !== req.user._id.toString())
+                await pub.save()
+                return res.send(pub)
+            } else {
+                throw new Error('You have not liked this')
+            }
+
+        } else {
+            throw new Error('Invalid operation')
+        }
+
+    } catch (e) {
+        console.log(e.message)
+        res.status(400).send({ error: e.message })
+    }
+})
+
+
+
+router.get('/reviews',auth , async (req, res) => {
     const Data = []
   try {
     // Wait for the query
     const reviews = await Review.find({}).populate('owner');
 
     reviews.forEach(element => {
+        const notclicked = element.people.every(p => p.person.toString() !== req.user._id.toString())
         const object = {
             id : element._id ,
             text : element.text ,
             date : element.date ,
             email : element.owner.email , 
-            name : element.owner.user_name
+            name : element.owner.user_name ,
+            likesNb : element.likesNb ,
+            clicked : ! notclicked
         }
         Data.push(object)
     });
 
     res.send(Data); // reviews already have `owner` populated
   } catch (e) {
-    console.error(req);
+    console.error(e);
     res.status(500).send();
   }
 });

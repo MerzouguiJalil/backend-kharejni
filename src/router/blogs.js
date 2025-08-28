@@ -35,13 +35,16 @@ router.get('/blogs', auth, async (req, res) => {
     const blogs = await Blog.find({}).populate('owner');
 
     blogs.forEach(element => {
+        const notclicked = element.people.every(p => p.person.toString() !== req.user._id.toString())
         const object = {
             id : element._id ,
             title : element.title ,
             content : element.content ,
             date : element.date ,
             email : element.owner.email , 
-            author : element.owner.user_name
+            author : element.owner.user_name ,
+            likesNb : element.likesNb ,
+            clicked : ! notclicked
         }
         Data.push(object)
     });
@@ -83,6 +86,52 @@ router.patch('/blogs/:id' , auth , async (req , res) => {
         console.log(e)
     }
 })
+
+router.patch('/blogs/likes/:id', auth, async (req, res) => {
+    try {
+        const op = req.body.op
+        const pub = await Blog.findById(req.params.id)
+
+        if (!pub) {
+            return res.status(404).send({ error: "blog not found" })
+        }
+
+        if (op === 'inc') {
+            // check if user already liked
+            const notLikedYet = pub.people.every(p => p.person.toString() !== req.user._id.toString())
+
+            if (notLikedYet) {
+                pub.likesNb++
+                pub.people.push({ person: req.user._id })
+                await pub.save()
+                return res.send(pub)
+            } else {
+                throw new Error('Already liked')
+            }
+
+        } else if (op === 'dec') {
+            // check if user has liked
+            const hasLiked = pub.people.some(p => p.person.toString() === req.user._id.toString())
+
+            if (hasLiked) {
+                pub.likesNb--
+                pub.people = pub.people.filter(p => p.person.toString() !== req.user._id.toString())
+                await pub.save()
+                return res.send(pub)
+            } else {
+                throw new Error('You have not liked this')
+            }
+
+        } else {
+            throw new Error('Invalid operation')
+        }
+
+    } catch (e) {
+        console.log(e.message)
+        res.status(400).send({ error: e.message })
+    }
+})
+
 
 router.delete('/blogs/:id' , auth , async (req , res) => {
     try {

@@ -19,7 +19,17 @@ const blogchema = mongoose.Schema({
     owner : {
         type : mongoose.Schema.Types.ObjectId , 
         ref : 'user'
-    }
+    } , 
+        likesNb : {
+            type : Number , 
+            default : 0
+        } , 
+        people : [{
+            person : {
+                type : mongoose.Schema.Types.ObjectId , 
+                required : true
+            }
+        }]
 })
 
 
