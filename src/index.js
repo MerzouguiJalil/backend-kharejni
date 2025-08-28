@@ -3,6 +3,7 @@ const express = require('express')
 require('./db/mongoose')
 const userRouter = require('./router/user')
 const reviewRouter = require('./router/reviw')
+const blogRouter = require('./router/blogs')
 const cors = require('cors')
 
 const app = express()
@@ -11,6 +12,7 @@ app.use(cors())
 app.use(express.json());
 app.use(userRouter)
 app.use(reviewRouter)
+app.use(blogRouter)
 
 
 
