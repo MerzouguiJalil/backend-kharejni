@@ -218,7 +218,7 @@ router.patch('/reviews/comment/:idp/:idc', auth, async (req, res) => {
 
     } catch(e) {
         console.log(e);
-        res.status(500).send('Server error');
+        res.status(500).send('Server error')
     }
 });
 
