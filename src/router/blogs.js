@@ -203,7 +203,9 @@ router.patch('/blogs/comment/:idp/:idc', auth, async (req, res) => {
         });
 
         if(indexc === -1) return res.status(404).send('Comment not found');
-
+          if( pub.comments[indexc].comment_owner.toString() !== req.user._id.toString()) {
+            return res.status(403).send('You are not allowed to update this comment');
+        }
         blog.comments[indexc].comment = req.body.comment;
         blog.comments[indexc].date = req.body.date;
 

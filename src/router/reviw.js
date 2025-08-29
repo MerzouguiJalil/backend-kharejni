@@ -203,7 +203,12 @@ router.patch('/reviews/comment/:idp/:idc', auth, async (req, res) => {
             }
         });
 
+
         if(indexc === -1) return res.status(404).send('Comment not found');
+
+        if( pub.comments[indexc].comment_owner.toString() !== req.user._id.toString()) {
+            return res.status(403).send('You are not allowed to update this comment');
+        }
 
         pub.comments[indexc].comment = req.body.comment;
         pub.comments[indexc].date = req.body.date;
