@@ -149,4 +149,71 @@ router.delete('/blogs/:id' , auth , async (req , res) => {
     }
 })
 
+// Blog Comment Routes - Add these to your Express router file
+
+router.post('/blogs/comment/:id', auth, async (req, res) => {
+    try {
+        const blog = await Blog.findOne({_id: req.params.id})
+        if(!blog) {
+            return res.status(404).send()
+        }
+
+        blog.comments = blog.comments.concat({...req.body, comment_owner: req.user._id})
+        await blog.save()
+        res.send(blog)
+
+    } catch(e) {
+        res.status(500).send()
+        console.log(e)
+    }
+})
+
+router.get('/blogs/comment/:id', auth, async (req, res) => {
+    try {
+        const blog = await Blog.findOne({_id: req.params.id})
+        if(!blog) {
+            return res.status(404).send()
+        }
+
+        await blog.populate('comments.comment_owner')
+        res.send(blog.comments)
+
+    } catch(e) {
+        res.status(500).send()
+        console.log(e)
+    }
+})
+
+router.patch('/blogs/comment/:idp/:idc', auth, async (req, res) => {
+    try {
+        const updates = Object.keys(req.body);
+        const permissions = ['comment', 'date'];
+
+        const isValid = updates.every(key => permissions.includes(key));
+        if(!isValid) return res.status(400).send('Invalid updates');
+
+        const blog = await Blog.findById(req.params.idp);
+        if(!blog) return res.status(404).send('Blog not found');
+
+        let indexc = -1;
+        blog.comments.forEach((element, index) => {
+            if(element.comment_owner.toString() === req.params.idc) {
+                indexc = index;
+            }
+        });
+
+        if(indexc === -1) return res.status(404).send('Comment not found');
+
+        blog.comments[indexc].comment = req.body.comment;
+        blog.comments[indexc].date = req.body.date;
+
+        await blog.save();
+        res.send(blog);
+
+    } catch(e) {
+        console.log(e);
+        res.status(500).send('Server error');
+    }
+});
+
 module.exports = router

@@ -29,7 +29,21 @@ const blogchema = mongoose.Schema({
                 type : mongoose.Schema.Types.ObjectId , 
                 required : true
             }
-        }]
+        }] , 
+            comments : [{
+                comment : {
+                    type : String ,
+                    required : true 
+                } ,
+                comment_owner : {
+                    type : mongoose.Schema.Types.ObjectId , 
+                    required : true , 
+                    ref : 'user'
+                } , 
+                date : {
+                    type : String ,
+                }
+            }]
 })
 
 
